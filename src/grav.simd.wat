@@ -45,110 +45,6 @@
   )
 
 
-  (func $vsetx (param $pointer i32) (param $x f32)
-    (f32.store offset=0 (local.get $pointer) (local.get $x))
-  )
-
-  (func $vsety (param $pointer i32) (param $y f32)
-    (f32.store offset=4 (local.get $pointer) (local.get $y))
-  )
-
-  (func $vsetz (param $pointer i32) (param $z f32)
-    (f32.store offset=8 (local.get $pointer) (local.get $z))
-  )
-  
-  (func $vadd (param $result i32 ) (param $left i32) (param $right i32) 
-    (local.get $result)
-    (f32.add
-      (f32.load offset=0 (local.get $left))
-      (f32.load offset=0 (local.get $right))
-    )
-    (f32.store offset=0)
-
-    (local.get $result)
-    (f32.add
-      (f32.load offset=4 (local.get $left))
-      (f32.load offset=4 (local.get $right))
-    )
-    (f32.store offset=4)
-
-    (local.get $result)
-    (f32.add
-      (f32.load offset=8 (local.get $left))
-      (f32.load offset=8 (local.get $right))
-    )
-    (f32.store offset=8)
-  )
-
-  (func $vsub (param $result i32 ) (param $left i32) (param $right i32) 
-    (local.get $result)
-    (f32.sub
-      (f32.load offset=0 (local.get $left))
-      (f32.load offset=0 (local.get $right))
-    )
-    (f32.store offset=0)
-
-    (local.get $result)
-    (f32.sub
-      (f32.load offset=4 (local.get $left))
-      (f32.load offset=4 (local.get $right))
-    )
-    (f32.store offset=4)
-
-    (local.get $result)
-    (f32.sub
-      (f32.load offset=8 (local.get $left))
-      (f32.load offset=8 (local.get $right))
-    )
-    (f32.store offset=8)
-  )
-
-  (func $vmulkv (param $result i32) (param $k f32) (param $vec i32) 
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=0 (local.get $vec))
-    )
-    (f32.store offset=0)
-
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=4 (local.get $vec))
-    )
-    (f32.store offset=4)
-
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=8 (local.get $vec))
-    )
-    (f32.store offset=8)
-  )
-
-  (func $vmulvk (param $result i32) (param $vec i32) (param $k f32)
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=0 (local.get $vec))
-    )
-    (f32.store offset=0)
-
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=4 (local.get $vec))
-    )
-    (f32.store offset=4)
-
-    (local.get $result)
-    (f32.mul
-      (local.get $k)
-      (f32.load offset=8 (local.get $vec))
-    )
-    (f32.store offset=8)
-  )
-
   (func $vdivvk (param $result i32) (param $vec i32) (param $k f32) 
     (local.get $result)
     (f32.div
@@ -189,14 +85,6 @@
     f32.add
   )
 
-  (func $vnorm (param $result i32) (param $vec i32)
-    (call $vdivvk 
-        (local.get $result)
-        (local.get $vec)
-        (call $vlen (local.get $vec))
-    )
-  )
-
   (func $vzero (param $vec i32)
     (f32.store offset=0 (local.get $vec) (f32.const 0))
     (f32.store offset=4 (local.get $vec) (f32.const 0))
@@ -233,12 +121,9 @@
   )
 
   (func $pClearForce (param $particle i32)
-    ;; (v128.store offset=32 (local.get $particle) (v128.const f32x4 0 0 0 0))
-    
     (f32.store offset=32 (local.get $particle) (f32.const 0))
     (f32.store offset=36 (local.get $particle) (f32.const 0))
     (f32.store offset=40 (local.get $particle) (f32.const 0))
-    (f32.store offset=44 (local.get $particle) (f32.const 0))
   )
 
   (func $pAddForce (param $particle i32) (param $vec i32)
@@ -252,7 +137,7 @@
   )
 
   (func $pSubForce (param $particle i32) (param $vec i32)
-    (v128.store offset=32
+     (v128.store offset=32
       (local.get $particle)
       (f32x4.sub
         (v128.load offset=32 (local.get $particle))
@@ -288,11 +173,10 @@
   )
 
   (func $pTick (param $particle i32) (param $dt f32)
-    (v128.store offset=16
+    (v128.store offset=16 ;;particle.velocity
       (local.get $particle)
       (f32x4.add
-        (v128.load offset=16 (local.get $particle))
-
+        (v128.load offset=16 (local.get $particle)) ;;particle.velocity
         (f32x4.mul
           (v128.load offset=32 (local.get $particle)) ;;particle.force
           (f32x4.splat
@@ -304,21 +188,21 @@
         )
       )
     )
-
+    
     (v128.store offset=0
-      (local.get $particle)
+      (local.get $particle) ;;particle.position
       (f32x4.add
         (v128.load offset=0 (local.get $particle))
-          (f32x4.mul
-            (v128.load offset=16 (local.get $particle)) ;;particle.velocity
-            (f32x4.splat (local.get $dt)
+        (f32x4.mul
+          (v128.load offset=16 (local.get $particle)) ;;particle.velocity
+          (f32x4.splat (local.get $dt)
           )
         )
       )
     )
   )
- 
 
+  
   (func $wInit (param $world i32)
     (call $wSetDt (local.get $world) (f32.const 1))
     (call $wSetGravityConst (local.get $world) (f32.const 6.67e-11))
@@ -496,10 +380,13 @@
       (local $minDist f32)
       (local $force f32)
       (local $penetration f32)
-      (call $vsub
+      (local $delta v128)
+      (v128.store
         (i32.const 0)
-        (call $pGetPositionPointer (local.get $left))
-        (call $pGetPositionPointer (local.get $right))
+        (f32x4.sub
+          (v128.load offset=0 (local.get $left)) ;;particle.position
+          (v128.load offset=0 (local.get $right)) ;;particle.position
+        )
       )
 
       (local.set $len
@@ -518,8 +405,8 @@
 
       (local.set $minDist
         (f32.add 
-          (f32.load offset=52 (local.get $left))
-          (f32.load offset=52 (local.get $right))
+          (f32.load offset=52 (local.get $left)) ;;particle.radius
+          (f32.load offset=52 (local.get $right)) ;;particle.radius
         )
       )
 
@@ -584,10 +471,12 @@
         )
       )
 
-      (call $vmulvk
+      (v128.store
         (i32.const 16)
-        (i32.const 16)
-        (local.get $force)
+        (f32x4.mul
+          (v128.load (i32.const 16))
+          (f32x4.splat (local.get $force))
+        )
       )
 
       (call $pSubForce (local.get $left) (i32.const 16))
@@ -674,17 +563,9 @@
   (export "vgetx" (func $vgetx))
   (export "vgety" (func $vgety))
   (export "vgetz" (func $vgetz))
-  (export "vsetx" (func $vsetx))
-  (export "vsety" (func $vsety))
-  (export "vsetz" (func $vsetz))
   (export "vset" (func $vset))
-  (export "vadd" (func $vadd))
-  (export "vsub" (func $vsub))
-  (export "vmulkv" (func $vmulkv))
-  (export "vmulvk" (func $vmulvk))
   (export "vdivvk" (func $vdivvk))
   (export "vscalar" (func $vscalar))
-  (export "vnorm" (func $vnorm))
   (export "vzero" (func $vzero))
   
   (export "pInit" (func $pInit))
