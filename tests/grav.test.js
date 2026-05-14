@@ -1,6 +1,7 @@
 const fs = require('fs');
-var source = fs.readFileSync(`./dist/${process.argv[2]}`);
-var typedArray = new Uint8Array(source);
+const source = fs.readFileSync(`./dist/${process.argv[2]}`);
+const typedArray = new Uint8Array(source);
+const targetName = process.argv[2];
 
 const env = {
     memory: new WebAssembly.Memory({
@@ -157,12 +158,28 @@ WebAssembly.instantiate(typedArray, {
         console.log(`(${x}, ${y}, ${z})`);
     }
 
-
     function readVector(index) {
         const x = instance.vgetx(index);
         const y = instance.vgety(index);
         const z = instance.vgetz(index);
         return { x, y, z };
+    }
+
+    function testVlen2() {
+        test("vlen2", assert => {
+            instance.vset(0, 12.0, 13.0, 14.0);
+            const res = instance.vlen2(0);
+            assert.equalFloat(509, res, `${targetName}: vlen2`);
+        });
+    }
+
+
+    function testVlen() {
+        test("vlen", assert => {
+            instance.vset(0, 12.0, 13.0, 14.0);
+            const res = instance.vlen(0);
+            assert.equalFloat(22.56102752685547, res, `${targetName}: vlen`);
+        });
     }
 
     function testAdd() {
@@ -555,36 +572,38 @@ WebAssembly.instantiate(typedArray, {
     }
 
 
+    testVlen();
+    testVlen2();
     testAdd();
-        testSub();
-        testMulkv();
-        testMulvk();
-        testDivvk();
-        testScalar();
-        testNorm();
-        testVZero();
-        testPInit();
-        testPClearForce();
-        testPAddForce();
-        testPSubForce();
-        testPGetSetMass();
-        testPGetSetRadius();
-        testPGetPositionPointer();
-        testPTick();
-        testWInit();
-        testWGetParticlePointer();
-        testWGetSetDt();
-        testWGetSetGravityConst();
-        testWGetSetStiffnessConst();
-        testWGetSetViscosityConst();
-        testWNewParticle();
-        testWRemoveParticle();
-        testWClearForces();
-        testWIterateGravity();
-        testWIterateStiffness();
-        testWIterateViscosity();
+    testSub();
+    testMulkv();
+    testMulvk();
+    testDivvk();
+    testScalar();
+    testNorm();
+    testVZero();
+    testPInit();
+    testPClearForce();
+    testPAddForce();
+    testPSubForce();
+    testPGetSetMass();
+    testPGetSetRadius();
+    testPGetPositionPointer();
+    testPTick();
+    testWInit();
+    testWGetParticlePointer();
+    testWGetSetDt();
+    testWGetSetGravityConst();
+    testWGetSetStiffnessConst();
+    testWGetSetViscosityConst();
+    testWNewParticle();
+    testWRemoveParticle();
+    testWClearForces();
+    testWIterateGravity();
+    testWIterateStiffness();
+    testWIterateViscosity();
 
-    }).catch(e => {
-        // error caught
-        console.log(e);
-    });
+}).catch(e => {
+    // error caught
+    console.log(e);
+});

@@ -534,7 +534,7 @@
         (i32.add
           (local.get 2)
           (i32.const 64)))
-      (br_if 0 (;@2;)
+      (br_if 0 (;@1;)
         (i32.lt_u
           (local.get 2)
           (local.get 1))))
